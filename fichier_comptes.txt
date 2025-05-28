@@ -1,5 +1,4 @@
-10,Hamad,Ammar,Chèque,600.00
-
+10,Hamad,Ammar,Chèque,1000.00
 20,Dupont,Jean,Épargne,2500.00
 30,Tremblay,Marie,Chèque,750.00
 40,Smith,John,Épargne,5000.00

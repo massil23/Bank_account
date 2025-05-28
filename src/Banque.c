@@ -152,135 +152,159 @@
  }
  
  /**
-  * Consulte les détails d'un compte (aucun verrouillage nécessaire)
-  */
- void consult_account(int fd) {
-     int code;
-     printf("Entrez le code du compte: ");
-     scanf("%d", &code);
-     while (getchar() != '\n'); // Vider le buffer
-     
-     Account account;
-     if (find_account_by_code(fd, code, &account) == 0) {
-         print_account(&account);
-     } else {
-         printf("Compte %d non trouvé.\n", code);
-     }
- }
+ * Consulte les détails d'un compte (aucun verrouillage nécessaire)
+ * vérifie si le fichier entier est verrouillé
+ */
+void consult_account(int fd) {
+    // Vérifier si le fichier entier est verrouillé (par une suppression en cours)
+    lseek(fd, 0, SEEK_SET);
+    if (lockf(fd, F_TEST, 0) == -1) {
+        printf("Le fichier est verrouillé veuillez essayer plus tard\n");
+        return;
+    }
+    
+    int code;
+    printf("Entrez le code du compte: ");
+    scanf("%d", &code);
+    while (getchar() != '\n'); // Vider le buffer
+    
+    Account account;
+    if (find_account_by_code(fd, code, &account) == 0) {
+        print_account(&account);
+    } else {
+        printf("Compte %d non trouvé.\n", code);
+    }
+}
  
  /**
-  * Retire un montant d'un compte (verrouillage sur l'enregistrement)
-  */
- void withdraw_from_account(int fd) {
-     int code;
-     double amount;
-     
-     printf("Entrez le code du compte: ");
-     scanf("%d", &code);
-     while (getchar() != '\n'); // Vider le buffer
-     
-     Account account;
-     if (find_account_by_code(fd, code, &account) != 0) {
-         printf("Compte %d non trouvé.\n", code);
-         return;
-     }
-     
-     // Verrouiller l'enregistrement
-     if (lock_record(fd, account.position, account.size) != 0) {
-         printf("L'enregistrement que vous voulez accéder est verrouillé\n");
-         return;
-     }
-     
-     printf("Solde actuel: %.2f$\n", account.solde);
-     printf("Entrez le montant à retirer: ");
-     scanf("%lf", &amount);
-     while (getchar() != '\n'); // Vider le buffer
-     
-     if (amount <= 0) {
-         printf("Le montant doit être positif.\n");
-         unlock(fd, account.position, account.size);
-         return;
-     }
-     
-     if (amount > account.solde) {
-         printf("Fonds insuffisants.\n");
-         unlock(fd, account.position, account.size);
-         return;
-     }
-     
-     account.solde -= amount;
-     
-     // Mettre à jour le compte dans le fichier
-     if (update_account_solde(fd, &account) != 0) {
-         printf("Erreur lors de la mise à jour du compte.\n");
-         unlock(fd, account.position, account.size);
-         return;
-     }
-     
-     printf("\n# code nom prénom solde\n");
-     printf("%d %s %s %.2f$\n", account.code, account.nom, account.prenom, account.solde);
-     
-     // Déverrouiller l'enregistrement
-     unlock(fd, account.position, account.size);
- }
+ * Retire un montant d'un compte (verrouillage sur l'enregistrement)
+ * vérifie d'abord si le fichier entier est verrouillé
+ */
+void withdraw_from_account(int fd) {
+    // Vérifier si le fichier entier est verrouillé (par une suppression en cours)
+    lseek(fd, 0, SEEK_SET);
+    if (lockf(fd, F_TEST, 0) == -1) {
+        printf("Le fichier est verrouillé veuillez essayer plus tard\n");
+        return;
+    }
+    
+    int code;
+    double amount;
+    
+    printf("Entrez le code du compte: ");
+    scanf("%d", &code);
+    while (getchar() != '\n'); // Vider le buffer
+    
+    Account account;
+    if (find_account_by_code(fd, code, &account) != 0) {
+        printf("Compte %d non trouvé.\n", code);
+        return;
+    }
+    
+    // Verrouiller l'enregistrement
+    if (lock_record(fd, account.position, account.size) != 0) {
+        printf("L'enregistrement que vous voulez accéder est verrouillé\n");
+        return;
+    }
+    
+    printf("Solde actuel: %.2f$\n", account.solde);
+    printf("Entrez le montant à retirer: ");
+    scanf("%lf", &amount);
+    while (getchar() != '\n'); // Vider le buffer
+    
+    if (amount <= 0) {
+        printf("Le montant doit être positif.\n");
+        unlock(fd, account.position, account.size);
+        return;
+    }
+    
+    if (amount > account.solde) {
+        printf("Fonds insuffisants.\n");
+        unlock(fd, account.position, account.size);
+        return;
+    }
+    
+    account.solde -= amount;
+    
+    // Mettre à jour le compte dans le fichier
+    if (update_account_solde(fd, &account) != 0) {
+        printf("Erreur lors de la mise à jour du compte.\n");
+        unlock(fd, account.position, account.size);
+        return;
+    }
+    
+    printf("\n# code nom prénom solde\n");
+    printf("%d %s %s %.2f$\n", account.code, account.nom, account.prenom, account.solde);
+    
+    // Déverrouiller l'enregistrement
+    unlock(fd, account.position, account.size);
+}
  
  /**
-  * Dépose un montant sur un compte (verrouillage sur l'attribut solde uniquement)
-  */
- void deposit_to_account(int fd) {
-     int code;
-     double amount;
-     
-     printf("Entrez le code du compte: ");
-     scanf("%d", &code);
-     while (getchar() != '\n'); // Vider le buffer
-     
-     Account account;
-     if (find_account_by_code(fd, code, &account) != 0) {
-         printf("Compte %d non trouvé.\n", code);
-         return;
-     }
-     
-     // Calculer la position et la taille de l'attribut solde
-     if (account.solde_pos == -1) {
-         printf("Erreur: position du solde non trouvée.\n");
-         return;
-     }
-     
-     off_t solde_offset = account.position + account.solde_pos;
-     
-     // Verrouiller uniquement l'attribut solde
-     if (lock_attribute(fd, solde_offset, account.solde_len) != 0) {
-         printf("Le solde que vous voulez accéder est verrouillé\n");
-         return;
-     }
-     
-     printf("Solde actuel: %.2f$\n", account.solde);
-     printf("Entrez le montant à déposer: ");
-     scanf("%lf", &amount);
-     while (getchar() != '\n'); // Vider le buffer
-     
-     if (amount <= 0) {
-         printf("Le montant doit être positif.\n");
-         unlock(fd, solde_offset, account.solde_len);
-         return;
-     }
-     
-     account.solde += amount;
-     
-     // Mettre à jour le solde dans le fichier
-     if (update_account_solde(fd, &account) != 0) {
-         printf("Erreur lors de la mise à jour du compte.\n");
-         unlock(fd, solde_offset, account.solde_len);
-         return;
-     }
-     
-     printf("\n# code nom prénom solde\n");
-     printf("%d %s %s %.2f$\n", account.code, account.nom, account.prenom, account.solde);
-     
-     // Déverrouiller le solde
-     unlock(fd, solde_offset, account.solde_len);
- }
+ * Dépose un montant sur un compte (verrouillage sur l'attribut solde uniquement)
+ * MAIS vérifie d'abord si le fichier entier est verrouillé
+ */
+void deposit_to_account(int fd) {
+    // Vérifier si le fichier entier est verrouillé (par une suppression en cours)
+    lseek(fd, 0, SEEK_SET);
+    if (lockf(fd, F_TEST, 0) == -1) {
+        printf("Le fichier est verrouillé veuillez essayer plus tard\n");
+        return;
+    }
+    
+    int code;
+    double amount;
+    
+    printf("Entrez le code du compte: ");
+    scanf("%d", &code);
+    while (getchar() != '\n'); // Vider le buffer
+    
+    Account account;
+    if (find_account_by_code(fd, code, &account) != 0) {
+        printf("Compte %d non trouvé.\n", code);
+        return;
+    }
+    
+    // Calculer la position et la taille de l'attribut solde
+    if (account.solde_pos == -1) {
+        printf("Erreur: position du solde non trouvée.\n");
+        return;
+    }
+    
+    off_t solde_offset = account.position + account.solde_pos;
+    
+    // Verrouiller uniquement l'attribut solde
+    if (lock_attribute(fd, solde_offset, account.solde_len) != 0) {
+        printf("Le solde que vous voulez accéder est verrouillé\n");
+        return;
+    }
+    
+    printf("Solde actuel: %.2f$\n", account.solde);
+    printf("Entrez le montant à déposer: ");
+    scanf("%lf", &amount);
+    while (getchar() != '\n'); // Vider le buffer
+    
+    if (amount <= 0) {
+        printf("Le montant doit être positif.\n");
+        unlock(fd, solde_offset, account.solde_len);
+        return;
+    }
+    
+    account.solde += amount;
+    
+    // Mettre à jour le solde dans le fichier
+    if (update_account_solde(fd, &account) != 0) {
+        printf("Erreur lors de la mise à jour du compte.\n");
+        unlock(fd, solde_offset, account.solde_len);
+        return;
+    }
+    
+    printf("\n# code nom prénom solde\n");
+    printf("%d %s %s %.2f$\n", account.code, account.nom, account.prenom, account.solde);
+    
+    // Déverrouiller le solde
+    unlock(fd, solde_offset, account.solde_len);
+}
  
  /**
   * Met à jour le solde d'un compte dans le fichier
@@ -345,14 +369,11 @@
      scanf("%d", &code);
      while (getchar() != '\n'); // Vider le buffer
      
-     // Cette implémentation est simplifiée et ne gère pas correctement la suppression
-     // dans un fichier texte. Dans un cas réel, il faudrait recréer un fichier temporaire
-     // sans la ligne à supprimer, puis renommer le fichier temporaire.
+     
      
      printf("Le compte %d est détruit.\n", code);
      
-     // Pour simuler la suppression, on peut marquer le compte comme supprimé
-     // en modifiant le code à -1, mais une vraie implémentation nécessiterait plus de travail
+    
      
      Account account;
      if (find_account_by_code(fd, code, &account) != 0) {
@@ -361,8 +382,7 @@
          return;
      }
      
-     // Dans une implémentation complète, on supprimerait la ligne
-     // Pour cette démonstration, on remplace la ligne par une ligne invalide
+     
      lseek(fd, account.position, SEEK_SET);
      char deleted_marker[MAX_LINE_LENGTH];
      snprintf(deleted_marker, sizeof(deleted_marker), "#DELETED,%d\n", code);
@@ -373,59 +393,67 @@
  }
  
  /**
-  * Affiche un attribut spécifique d'un compte
-  */
- void display_attribute(int fd) {
-     int code;
-     int attribute_choice;
-     
-     printf("Entrez le code du compte: ");
-     scanf("%d", &code);
-     while (getchar() != '\n'); // Vider le buffer
-     
-     Account account;
-     if (find_account_by_code(fd, code, &account) != 0) {
-         printf("Compte %d non trouvé.\n", code);
-         return;
-     }
-     
-     printf("Quel attribut voulez-vous afficher?\n");
-     printf("1. Nom\n");
-     printf("2. Prénom\n");
-     printf("3. Solde\n");
-     printf("Votre choix: ");
-     scanf("%d", &attribute_choice);
-     while (getchar() != '\n'); // Vider le buffer
-     
-     switch (attribute_choice) {
-         case 1:
-             printf("Nom: %s\n", account.nom);
-             break;
-         case 2:
-             printf("Prénom: %s\n", account.prenom);
-             break;
-         case 3:
-             // Pour le solde, on vérifie d'abord s'il est verrouillé
-             if (account.solde_pos == -1) {
-                 printf("Erreur: position du solde non trouvée.\n");
-                 return;
-             }
-             
-             off_t solde_offset = account.position + account.solde_pos;
-             
-             // Essayer un test de verrouillage (F_TEST)
-             lseek(fd, solde_offset, SEEK_SET);
-             if (lockf(fd, F_TEST, account.solde_len) == -1) {
-                 printf("Le solde que vous voulez accéder est verrouillé\n");
-             } else {
-                 printf("Solde: %.2f$\n", account.solde);
-             }
-             break;
-         default:
-             printf("Choix invalide.\n");
-             break;
-     }
- }
+ * Affiche un attribut spécifique d'un compte
+ * MAIS vérifie d'abord si le fichier entier est verrouillé
+ */
+void display_attribute(int fd) {
+    // Vérifier si le fichier entier est verrouillé (par une suppression en cours)
+    lseek(fd, 0, SEEK_SET);
+    if (lockf(fd, F_TEST, 0) == -1) {
+        printf("Le fichier est verrouillé veuillez essayer plus tard\n");
+        return;
+    }
+    
+    int code;
+    int attribute_choice;
+    
+    printf("Entrez le code du compte: ");
+    scanf("%d", &code);
+    while (getchar() != '\n'); // Vider le buffer
+    
+    Account account;
+    if (find_account_by_code(fd, code, &account) != 0) {
+        printf("Compte %d non trouvé.\n", code);
+        return;
+    }
+    
+    printf("Quel attribut voulez-vous afficher?\n");
+    printf("1. Nom\n");
+    printf("2. Prénom\n");
+    printf("3. Solde\n");
+    printf("Votre choix: ");
+    scanf("%d", &attribute_choice);
+    while (getchar() != '\n'); // Vider le buffer
+    
+    switch (attribute_choice) {
+        case 1:
+            printf("Nom: %s\n", account.nom);
+            break;
+        case 2:
+            printf("Prénom: %s\n", account.prenom);
+            break;
+        case 3:
+            // Pour le solde, on vérifie d'abord s'il est verrouillé
+            if (account.solde_pos == -1) {
+                printf("Erreur: position du solde non trouvée.\n");
+                return;
+            }
+            
+            off_t solde_offset = account.position + account.solde_pos;
+            
+            // Essayer un test de verrouillage (F_TEST)
+            lseek(fd, solde_offset, SEEK_SET);
+            if (lockf(fd, F_TEST, account.solde_len) == -1) {
+                printf("Le solde que vous voulez accéder est verrouillé\n");
+            } else {
+                printf("Solde: %.2f$\n", account.solde);
+            }
+            break;
+        default:
+            printf("Choix invalide.\n");
+            break;
+    }
+}
  
  /**
   * Cherche un compte par son code
