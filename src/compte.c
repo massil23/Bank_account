@@ -3,6 +3,9 @@
  * Travail pratique #0: Verrouillage de fichiers
  * 
  * Utilitaire pour initialiser le fichier texte de comptes avec des données de test
+ *  
+ * @author MASSIL ZADOUD
+ * @date 29 mai 2025
  */
 
  #include "Banque.h"
@@ -29,10 +32,10 @@
          double solde;
      } test_accounts[] = {
          {10, "Hamad", "Ammar", "Chèque", 1000.0},
-         {20, "Dupont", "Jean", "Épargne", 2500.0},
-         {30, "Tremblay", "Marie", "Chèque", 750.0},
-         {40, "Smith", "John", "Épargne", 5000.0},
-         {50, "Garcia", "Carlos", "Chèque", 1200.0}
+         {20, "Zadoud", "Massil", "Épargne", 2500.0},
+         {30, "Achek", "Momo", "Chèque", 750.0},
+         {40, "Feham", "Ismail", "Épargne", 5000.0},
+         {50, "Anes", "Abdel", "Chèque", 1200.0}
      };
  
      int num_accounts = sizeof(test_accounts) / sizeof(test_accounts[0]);

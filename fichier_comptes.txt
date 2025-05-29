@@ -1,5 +1,5 @@
 10,Hamad,Ammar,Chèque,1000.00
-20,Dupont,Jean,Épargne,2500.00
-30,Tremblay,Marie,Chèque,750.00
-40,Smith,John,Épargne,5000.00
-50,Garcia,Carlos,Chèque,1200.00
+20,Zadoud,Massil,Épargne,2500.00
+30,Achek,Momo,Chèque,750.00
+40,Feham,Ismail,Épargne,5000.00
+50,Anes,Abdel,Chèque,1200.00

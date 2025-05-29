@@ -3,6 +3,9 @@
  * Travail pratique #0: Verrouillage de fichiers
  * 
  * Fichier d'en-tête pour le gestionnaire de comptes bancaires
+ * 
+ * @author MASSIL ZADOUD
+ * @date 29 mai 2025
  */
 
  #ifndef BANQUE_H
@@ -20,7 +23,7 @@
  #include <fcntl.h>
  #include <errno.h>
  #include <stdbool.h>
- #include <strings.h> // Pour strcasecmp
+ #include <strings.h>
  
  /* Si les constantes de verrouillage ne sont pas définies, les définir manuellement */
  #ifndef F_ULOCK
