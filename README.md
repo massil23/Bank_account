@@ -67,12 +67,7 @@ make clean
 Avant d'utiliser le gestionnaire, vous devez initialiser le fichier de comptes :
 
 ```bash
-./bin/compte nom_fichier_comptes.txt
-```
-
-**Exemple :**
-```bash
-./bin/compte comptes.txt
+./bin/compte fichier_comptes.txt
 ```
 
 Cette commande créera un fichier avec 5 comptes de test pré-configurés.
@@ -82,13 +77,9 @@ Cette commande créera un fichier avec 5 comptes de test pré-configurés.
 Exécutez le gestionnaire en spécifiant le fichier de comptes :
 
 ```bash
-./bin/banque nom_fichier_comptes.txt
+./bin/banque fichier_comptes.txt
 ```
 
-**Exemple :**
-```bash
-./bin/banque comptes.txt
-```
 
 ## Fonctionnalités
 
@@ -117,4 +108,4 @@ Le gestionnaire offre 6 options principales :
 **MASSIL ZADOUD**  
 Étudiant en INF-3173-40 - Principes des systèmes d'exploitation  
 Université du Québec à Montréal (UQAM)  
-Session : Hiver 2025
+Session : Été 2025
