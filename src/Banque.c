@@ -30,14 +30,14 @@
          display_menu();
          printf("Votre choix: ");
          if (scanf("%d", &choice) != 1) {
-             // Nettoyer l'entrée
+             
              int c;
              while ((c = getchar()) != '\n' && c != EOF);
              printf("Choix invalide. Veuillez réessayer.\n");
              continue;
          }
          
-         // Vider le buffer
+         
          while (getchar() != '\n');
  
          switch (choice) {
@@ -127,7 +127,7 @@
      
      account->type = string_to_account_type(type_str);
  
-     // Trouver la position du solde dans la ligne
+     
      char* solde_ptr = strrchr(line, ',');
      if (solde_ptr) {
          account->solde_pos = solde_ptr - line + 1;
@@ -179,7 +179,6 @@
  * @param fd Descripteur du fichier de comptes ouvert
  */
 void consult_account(int fd) {
-    // Vérifier si le fichier entier est verrouillé
     lseek(fd, 0, SEEK_SET);
     if (lockf(fd, F_TEST, 0) == -1) {
         printf("Le fichier est verrouillé veuillez essayer plus tard\n");
@@ -189,7 +188,7 @@ void consult_account(int fd) {
     int code;
     printf("Entrez le code du compte: ");
     scanf("%d", &code);
-    while (getchar() != '\n'); // Vider le buffer
+    while (getchar() != '\n'); 
     
     Account account;
     if (find_account_by_code(fd, code, &account) == 0) {
@@ -208,7 +207,6 @@ void consult_account(int fd) {
  * @param fd Descripteur du fichier de comptes ouvert
  */
 void withdraw_from_account(int fd) {
-    // Vérifier si le fichier entier est verrouillé
     lseek(fd, 0, SEEK_SET);
     if (lockf(fd, F_TEST, 0) == -1) {
         printf("Le fichier est verrouillé veuillez essayer plus tard\n");
@@ -228,7 +226,7 @@ void withdraw_from_account(int fd) {
         return;
     }
     
-    // Verrouiller l'enregistrement
+    
     if (lock_record(fd, account.position, account.size) != 0) {
         printf("L'enregistrement que vous voulez accéder est verrouillé\n");
         return;
@@ -253,7 +251,7 @@ void withdraw_from_account(int fd) {
     
     account.solde -= amount;
     
-    // Mettre à jour le compte dans le fichier
+    
     if (update_account_solde(fd, &account) != 0) {
         printf("Erreur lors de la mise à jour du compte.\n");
         unlock(fd, account.position, account.size);
@@ -263,7 +261,7 @@ void withdraw_from_account(int fd) {
     printf("\n# code nom prénom solde\n");
     printf("%d %s %s %.2f$\n", account.code, account.nom, account.prenom, account.solde);
     
-    // Déverrouiller l'enregistrement
+    
     unlock(fd, account.position, account.size);
 }
  
@@ -276,7 +274,6 @@ void withdraw_from_account(int fd) {
  * @param fd Descripteur du fichier de comptes ouvert
  */
 void deposit_to_account(int fd) {
-    // Vérifier si le fichier entier est verrouillé
     lseek(fd, 0, SEEK_SET);
     if (lockf(fd, F_TEST, 0) == -1) {
         printf("Le fichier est verrouillé veuillez essayer plus tard\n");
@@ -296,7 +293,7 @@ void deposit_to_account(int fd) {
         return;
     }
     
-    // Calculer la position et la taille de l'attribut solde
+    
     if (account.solde_pos == -1) {
         printf("Erreur: position du solde non trouvée.\n");
         return;
@@ -304,7 +301,7 @@ void deposit_to_account(int fd) {
     
     off_t solde_offset = account.position + account.solde_pos;
     
-    // Verrouiller uniquement l'attribut solde
+    
     if (lock_attribute(fd, solde_offset, account.solde_len) != 0) {
         printf("Le solde que vous voulez accéder est verrouillé\n");
         return;
@@ -323,7 +320,7 @@ void deposit_to_account(int fd) {
     
     account.solde += amount;
     
-    // Mettre à jour le solde dans le fichier
+    
     if (update_account_solde(fd, &account) != 0) {
         printf("Erreur lors de la mise à jour du compte.\n");
         unlock(fd, solde_offset, account.solde_len);
@@ -333,7 +330,7 @@ void deposit_to_account(int fd) {
     printf("\n# code nom prénom solde\n");
     printf("%d %s %s %.2f$\n", account.code, account.nom, account.prenom, account.solde);
     
-    // Déverrouiller le solde
+    
     unlock(fd, solde_offset, account.solde_len);
 }
  

@@ -27,19 +27,19 @@
  
  /* Si les constantes de verrouillage ne sont pas définies, les définir manuellement */
  #ifndef F_ULOCK
- #define F_ULOCK 0    /* Déverrouiller une section précédemment verrouillée */
+ #define F_ULOCK 0    
  #endif
  
  #ifndef F_LOCK
- #define F_LOCK 1     /* Verrouiller une section (bloquant) */
+ #define F_LOCK 1     
  #endif
  
  #ifndef F_TLOCK
- #define F_TLOCK 2    /* Tester et verrouiller une section (non bloquant) */
+ #define F_TLOCK 2    
  #endif
  
  #ifndef F_TEST
- #define F_TEST 3     /* Tester une section pour d'autres verrous */
+ #define F_TEST 3     
  #endif
  
  // Définition des constantes
